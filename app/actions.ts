@@ -6,6 +6,7 @@ import { fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth-server";
+import { error } from "console";
 
 //useMutation works only on client side env.
 //use fetchMutation, fetchQuery and fetchAction
@@ -14,24 +15,53 @@ import { getToken } from "@/lib/auth-server";
 //create only mutation logic from here. It creates an internal post request
 //it is a public endpoint. Treat it like an API route. Auth the user. Data is validated
 export async function createBlog(values: z.infer<typeof blogSchema>) {
-    const parsed = blogSchema.safeParse(values);
+    try {
+        const parsed = blogSchema.safeParse(values);
 
 
-    if(!parsed.success) {
-        throw new Error("something went wrong");
+        if(!parsed.success) {
+            throw new Error("something went wrong");
+        }
+
+        const token = await getToken(); //JWT token
+
+        const imageUrl = await fetchMutation(
+            api.posts.generateImageUploadUrl,
+            {},
+            {token}
+        );
+
+        const uploadRes = await fetch(imageUrl, {
+            method: "POST",
+            body: parsed.data.image,
+            headers: {
+                "Content-Type" : parsed.data.image.type,
+            }
+        })
+
+        if(!uploadRes.ok) {
+            return {
+                error: "Failed to upload image",
+            };
+        }
+
+        const {storageId} = await uploadRes.json();
+        await fetchMutation(
+            api.posts.createPost,
+            {
+                body: parsed.data.title,
+                title: parsed.data.content,
+                imageStorageId: storageId,
+            }
+        , { token });
+
+    } catch {
+        return {
+                error: "Failed to create post",
+        };
     }
 
-    const token = await getToken();
-
-    await fetchMutation(
-        api.posts.createPost,
-        {
-            body: parsed.data.title,
-            title: parsed.data.content,
-        }
-    , { token });
-
-    return redirect("/");
+    return redirect("/blog"); //never use it in the try statement or else there will be an internal server error
 }
 
 //we have to provide the token itself here

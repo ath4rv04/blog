@@ -18,14 +18,14 @@ import { toast } from "sonner";
 import z from "zod";
 
 export default function createRoute() {
-    const router = useRouter();
     const [isPending, startTransition] = useTransition();;
-    const mutation = useMutation(api.posts.createPost); //mutation runs in order
+    
     const form = useForm({
             resolver: zodResolver(blogSchema),
             defaultValues: {
                 title:"",
                 content:"",
+                image: undefined,
             },
         });
 
@@ -71,6 +71,18 @@ export default function createRoute() {
                                 )}
                             </Field>
                         )} />
+                        <Controller name ="image" control={form.control} render = {({field, fieldState}) => (
+                            <Field>
+                                <FieldLabel>Image</FieldLabel>
+                                <Input aria-invalid = {fieldState.invalid} placeholder="" type="file" accept="image/*" onChange={(event) => {
+                                    const file = event?.target.files?.[0];
+                                    field.onChange(file);
+                                }}/>
+                                {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                )}
+                            </Field>
+                        )} />
                         <Button disabled = {isPending}>{isPending ? (
                             <>
                                 <Loader2 className="size-4 animate-spin" />
@@ -86,3 +98,10 @@ export default function createRoute() {
         </div>
     )
 }
+
+//file upload => client send upload req to sever which create api call to convex.
+//convex moves to bucket which generates a presigned url which will be returned back to the client
+//image will be uploaded to the client side. the files can be as large as wanted or needed.
+//vercel size limit 4.5mb, next js 1mb limit => server limit
+
+//whenever you upload files dont upload them on the server side. Validate them too

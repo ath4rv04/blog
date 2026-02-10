@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'flippant-sockeye-771.convex.cloud',
+        port: '',
+      },
     ],
   },
 };

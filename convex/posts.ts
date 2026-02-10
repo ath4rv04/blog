@@ -9,7 +9,7 @@ import { authComponent } from "./auth";
 
 // Create a new post with the given text
 export const createPost = mutation({
-  args: { title: v.string(), body: v.string()},  //validation is also done here
+  args: { title: v.string(), body: v.string(), imageStorageId: v.id("_storage")},  //validation is also done here
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
 
@@ -21,6 +21,7 @@ export const createPost = mutation({
         body: args.body,
         title: args.title,
         authId: user._id, //id is authomatically assigned in convex
+        imageStorageId: args.imageStorageId,
     });
     return blogArticle;
   },
@@ -31,6 +32,28 @@ export const getPost = query({
   handler: async (ctx) => {
     const posts = await ctx.db.query("posts").order("desc").collect(); 
 
-    return posts;
+    return await Promise.all (
+      posts.map(async (post) => {
+        const resolvedImageUrl = post.imageStorageId !== undefined ? await ctx.storage.getUrl(post.imageStorageId) : null;
+
+        return {
+          ...post,
+          imageUrl : resolvedImageUrl,
+        }
+      })
+    )
   },
 });
+
+export const generateImageUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+
+    if(!user) {
+        throw new ConvexError("Not Authenticated");
+    }
+
+    return await ctx.storage.generateUploadUrl(); //there is nothing to pass
+  }
+})
