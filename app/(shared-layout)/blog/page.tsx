@@ -9,6 +9,10 @@ import { resolve } from "path";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const dynamic = 'force-static' //static rendering
+
+export const revalidate = 30; //revalidating time
+
 export default function blog() {
     
     return(
@@ -32,27 +36,27 @@ async function LoadBlog() {
 
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {data?.map((posts) => (
-                    <Card key = {posts._id} className="pt-0">
+                {data?.map((post) => (
+                    <Card key = {post._id} className="pt-0">
                         <div className="relative h-48 w-full overflow-hidden">
                             <Image
-                            src={posts.imageUrl ?? "https://images.unsplash.com/photo-1770106678115-ec9aa241cdf6?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dhttps://images.unsplash.com/photo-1770106678115-ec9aa241cdf6?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"} alt="image" 
+                            src={post.imageUrl ?? "https://images.unsplash.com/photo-1770106678115-ec9aa241cdf6?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"} alt="image" 
                             fill 
                             
                             className="rounded-t-lg object-cover"/>
                         </div>
 
                         <CardContent>
-                            <Link href={'/blog/${post._id}'}>
-                                <h1 className="text-2xl font-bold hover:text-primary">{posts.body}</h1>
+                            <Link href={`/blog/${post._id}`}>
+                                <h1 className="text-2xl font-bold hover:text-primary">{post.body}</h1>
                             </Link>
-                            <p className="text-muted-foreground line-clamp-3">{posts.title}</p>
+                            <p className="text-muted-foreground line-clamp-3">{post.title}</p>
                         </CardContent>
 
                         <CardFooter>
                             <Link className={buttonVariants({
                                 className: 'w-full',
-                            })} href={'/blog/${post._id}'}>
+                            })} href={`/blog/${post._id}`}>
                                 Read More
                             </Link>
                         </CardFooter>
@@ -98,3 +102,30 @@ function SkeletonLoading() {
 //the blog page doesnt need any reactivity tho
 
 //convex provide preloading to retain reactivity use preloadQuery()
+
+//Caching
+
+//Static rendering => a cdn serves the client.
+//Hosting builds the app => next js checks what routes are dynamic and what are static.
+//For static rendering the html is generated at the build time and send to the cdn. cached
+
+//The user is served by the cdn which is gloablly distrubted and is super fast.
+
+//dynamic route => html is generated at the runtime not the build time.
+//if we use dynamic rendering you always get fresh data. 
+//Static rendering -> data is stale not fresh. data at its core is not revalidated
+
+
+//Route (app)
+// ┌ ○ /
+// ├ ○ /_not-found
+// ├ ƒ /api/auth/[...all]
+// ├ ƒ /api/create-blog
+// ├ ○ /auth/login
+// ├ ○ /auth/sign-up
+// ├ ƒ /blog
+// └ ○ /create
+
+
+// ○  (Static)   prerendered as static content
+// ƒ  (Dynamic)  server-rendered on demand

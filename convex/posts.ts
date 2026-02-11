@@ -7,7 +7,8 @@ import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { authComponent } from "./auth";
 
-// Create a new post with the given text
+//server functions
+
 export const createPost = mutation({
   args: { title: v.string(), body: v.string(), imageStorageId: v.id("_storage")},  //validation is also done here
   handler: async (ctx, args) => {
@@ -56,4 +57,24 @@ export const generateImageUploadUrl = mutation({
 
     return await ctx.storage.generateUploadUrl(); //there is nothing to pass
   }
-})
+});
+
+export const getPostById = query({
+  args: {
+    postId: v.id("posts"),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db.get(args.postId);
+
+    if(!post) {
+      return null;
+    }
+
+    const resolvedImageUrl = post?.imageStorageId !== undefined ? await ctx.storage.getUrl(post.imageStorageId) : null;
+    
+    return {
+      ...post,
+      imageUrl: resolvedImageUrl,
+    };
+  },
+});
