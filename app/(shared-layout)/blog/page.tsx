@@ -9,10 +9,14 @@ import { resolve } from "path";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from 'next'
+import { connection } from "next/server";
+import { cacheLife, cacheTag } from "next/cache";
 
-export const dynamic = 'force-static' //static rendering
+// export const dynamic = 'force-static' //static rendering
 
-export const revalidate = 30; //revalidating time
+// export const revalidate = 30; //revalidating time
+
+//^^ this wont work with cached components
  
 export const metadata: Metadata = {
   title: "Blog | Next.js 16 Tutorial",
@@ -29,17 +33,19 @@ export default function blog() {
                 <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Our Blog</h1>
                 <p className="pt-4 max-w-2xl mx-auto text-xl text-muted-foreground">Insights, thoughts, and trends from our team.</p>
             </div>
-            <Suspense fallback={
+            {/* <Suspense fallback={
                 <SkeletonLoading/>
-            }>
+            }> */}
                 <LoadBlog />
-            </Suspense>
+            {/* </Suspense> */}
         </div>
     ); // data is being fetched on the client side thats why we dont see it in the first time
 }
 
 async function LoadBlog() {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    "use cache";
+    cacheLife("hours");
+    cacheTag("blog");
     const data = await fetchQuery(api.posts.getPost);
 
     return (

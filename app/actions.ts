@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth-server";
 import { error } from "console";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 //useMutation works only on client side env.
 //use fetchMutation, fetchQuery and fetchAction
@@ -62,8 +62,8 @@ export async function createBlog(values: z.infer<typeof blogSchema>) {
         };
     }
 
-    revalidatePath("/blog"); //allows you to purge cached data on demand
-
+    // revalidatePath("/blog"); //allows you to purge cached data on demand. Can be used when cached components are not used
+    updateTag("blog");
     return redirect("/blog"); //never use it in the try statement or else there will be an internal server error
 }
 

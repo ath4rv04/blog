@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 interface postIdRouteProps {
     params: Promise<{
@@ -49,6 +50,10 @@ export default async function PostIdRoute({params} : postIdRouteProps) {
         await fetchQuery(api.presence.getUserId, {}, { token }),
     ]) //perfomance optimization. they will run in parallel
     
+    if(!userId) {
+        return redirect("/auth/login"); //multi layer authorization. This never fails. Server side check never fails
+    }
+
     if(!post) {
         return <div><h1 className="text-6xl font-extrabold text-red-500 p-20">No Post</h1></div>
     }

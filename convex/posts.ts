@@ -6,6 +6,8 @@
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { authComponent } from "./auth";
+import { Doc } from "./_generated/dataModel";
+import { title } from "process";
 
 //server functions
 
@@ -78,3 +80,59 @@ export const getPostById = query({
     };
   },
 });
+
+interface searchResultTypes {
+  _id: string,
+  title: string,
+  body: string,
+}
+
+export const searchPosts = query({
+  args: {
+    term: v.string(),
+    limit: v.number(),
+  },
+  handler:async (ctx, args) => {
+    const limit = args.limit;
+
+    const results : Array<searchResultTypes> = [];
+
+    const seen = new Set(); //to prevent duplicates
+
+    const pushDocs = async (docs: Array<Doc<"posts">>) => {
+      for(const doc of docs) {
+        if(seen.has(doc._id)) continue;
+
+        seen.add(doc._id);
+
+        results.push({
+          _id: doc._id,
+          title: doc.title,
+          body: doc.body,
+        });
+
+        if (results.length >= limit) break;
+      }
+    };
+
+    const titleMatches = await ctx.db.query("posts").withSearchIndex("search_body", (q) => q.search("body", args.term)).take(limit);
+
+    await pushDocs(titleMatches);
+
+    if(results.length < limit) {
+      const bodyMatches = await ctx.db.query("posts").withSearchIndex("search_title", (q) => q.search("title" ,args.term)).take(limit);
+
+      await pushDocs(bodyMatches);
+    }
+
+    return results;
+  },
+});
+
+//the above code is a query function and this function performs a full text search on the posts table
+//term is what the user types
+//limit is the max no of results
+//we get the limit form args, res array will store all results having an id, body and title
+//seen is there to track doc ids and prevents duplication
+
+//pushDoc is a helper function which adds in the result
