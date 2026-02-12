@@ -38,21 +38,22 @@ export default function blog() {
                 </p>
 
             </div>
-            {/* <Suspense fallback={
+            <Suspense fallback={
                 <SkeletonLoading/>
-            }> */}
+            }>
                 <LoadBlog />
-            {/* </Suspense> */}
+            </Suspense>
             </div>
         </div>
     ); // data is being fetched on the client side thats why we dont see it in the first time
 }
 
 async function LoadBlog() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("blog");
+//   "use cache";
+//   cacheLife("hours");
+//   cacheTag("blog");
 
+    await connection();
   const data = await fetchQuery(api.posts.getPost);
 
   if (!data || data.length === 0) {
