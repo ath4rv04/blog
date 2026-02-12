@@ -12,9 +12,9 @@ import type { Metadata } from 'next'
 import { connection } from "next/server";
 import { cacheLife, cacheTag } from "next/cache";
 
-// export const dynamic = 'force-static' //static rendering
+export const dynamic = 'force-static' //static rendering
 
-// export const revalidate = 30; //revalidating time
+export const revalidate = 30; //revalidating time
 
 //^^ this wont work with cached components
  
@@ -49,9 +49,9 @@ export default function blog() {
 }
 
 async function LoadBlog() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("blog");
+//   "use cache";
+//   cacheLife("hours");
+//   cacheTag("blog");
 
     // await connection();
   const data = await fetchQuery(api.posts.getPost);

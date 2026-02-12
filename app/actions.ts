@@ -62,8 +62,8 @@ export async function createBlog(values: z.infer<typeof blogSchema>) {
         };
     }
 
-    // revalidatePath("/blog"); //allows you to purge cached data on demand. Can be used when cached components are not used
-    updateTag("blog");
+    revalidatePath("/blog"); //allows you to purge cached data on demand. Can be used when cached components are not used
+    // updateTag("blog");
     return redirect("/blog"); //never use it in the try statement or else there will be an internal server error
 }
 
